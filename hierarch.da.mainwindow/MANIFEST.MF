@@ -1,0 +1,2 @@
+Plugin-SymbolicName:hierarch.da.mainwindow
+Plugin-Version:1.0.0

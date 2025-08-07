@@ -1,0 +1,2 @@
+Plugin-SymbolicName:hierarch.da.sendctrl
+Plugin-Version:1.0.0

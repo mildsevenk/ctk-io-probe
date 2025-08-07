@@ -1,0 +1,2 @@
+Plugin-SymbolicName:hierarch.da.datashow
+Plugin-Version:1.0.0

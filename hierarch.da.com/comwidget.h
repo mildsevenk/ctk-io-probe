@@ -17,6 +17,7 @@ public:
     virtual const QString getDeviceName();
     virtual QWidget* getWidget();
     virtual bool setParent(QWidget* pParent);
+    void sendData(QByteArray data);
 private:
     const QSerialPort::BaudRate getCurBaudRate();
     const QSerialPort::Parity getCurParity();
@@ -38,9 +39,11 @@ private:
 signals:
     void notifyMessage(QString strInfo);
     void dataMessage(QByteArray data);
+    void acvticeSendData(QByteArray data);
 private slots:
     void onButtonClicked();
     void readData();
+    void sendDataContent(QByteArray data);
 };
 
 #endif // COMWIDGET_H

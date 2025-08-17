@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include "IDAWidget.h"
+#include <QButtonGroup>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class SendWidget; }
@@ -21,11 +22,12 @@ public:
     void setShowMode(bool bMode);
 private:
     Ui::SendWidget *ui;
+    QButtonGroup* m_buttonGroup;
 signals:
     void modeStatusChanged(bool bMode);
+    void activeModeStatusChanged(bool bMode);
 private slots:
-    void onASCIICheckChanged(bool checked);
-    void onHEXCheckChanged(bool checked);
+    void onButtonClicked(QAbstractButton *button);
 };
 
 #endif // SENDWIDGET_H

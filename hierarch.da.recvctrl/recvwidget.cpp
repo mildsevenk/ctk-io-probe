@@ -1,17 +1,25 @@
 ﻿#include "recvwidget.h"
 
 #include "ui_RecvWidget.h"   // 由 AUTOUIC 自动生成
+#include <QDebug>
 
 RecvWidget::RecvWidget(QWidget *parent)
     : QWidget(parent), ui(new Ui::RecvWidget)
 {
     ui->setupUi(this);
-    connect(ui->rbASCII, SIGNAL(toggled(bool)),
-            this,          SLOT(onASCIICheckChanged(bool)));
-    connect(ui->rbHEX, SIGNAL(toggled(bool)),
-            this,          SLOT(onHEXCheckChanged(bool)));
+    ui->rbASCII->setCheckable(true);
+    ui->rbHEX->setCheckable(true);
+    ui->cbAutoLine->setCheckable(true);
+    m_buttonGroup = new QButtonGroup(this);
+    m_buttonGroup->addButton(ui->rbASCII);
+    m_buttonGroup->addButton(ui->rbHEX);
+    connect(m_buttonGroup, QOverload<QAbstractButton*>::of(&QButtonGroup::buttonClicked), this, &RecvWidget::onButtonClicked);
     connect(ui->cbAutoLine, SIGNAL(toggled(bool)),
             this,          SLOT(onWrapCheckChanged(bool)));
+    connect(this, &RecvWidget::activeModeStatusChanged,
+            ui->rbASCII, &QCheckBox::setChecked,Qt::QueuedConnection);
+    connect(this, &RecvWidget::activeWrapStatusChanged,
+            ui->cbAutoLine, &QRadioButton::setChecked,Qt::QueuedConnection);
 }
 
 RecvWidget::~RecvWidget() = default;
@@ -34,33 +42,30 @@ bool RecvWidget::setParent(QWidget* pParent)
     }
 }
 
-
-void RecvWidget::onASCIICheckChanged(bool checked)
+void RecvWidget::onButtonClicked(QAbstractButton *button)
 {
-    if(checked)
-    {
-        ui->rbHEX->setChecked(false);
-        emit modeStatusChanged(true);
-    }
-    else
-    {
-        ui->rbHEX->setChecked(true);
-        emit modeStatusChanged(false);
-    }
 
-}
-
-void RecvWidget::onHEXCheckChanged(bool checked)
-{
-    if(checked)
+    if(button == ui->rbASCII)
     {
-        ui->rbASCII->setChecked(false);
-        emit modeStatusChanged(false);
+        if(ui->rbASCII->isChecked())
+        {
+            emit modeStatusChanged(true);
+        }
+        else
+        {
+            emit modeStatusChanged(false);
+        }
     }
-    else
+    else if(button == ui->rbHEX)
     {
-        ui->rbASCII->setChecked(true);
-        emit modeStatusChanged(true);
+        if(ui->rbHEX->isChecked())
+        {
+            emit modeStatusChanged(false);
+        }
+        else
+        {
+            emit modeStatusChanged(true);
+        }
     }
 }
 
@@ -71,19 +76,10 @@ void RecvWidget::onWrapCheckChanged(bool checked)
 
 void RecvWidget::setShowMode(bool bMode)
 {
-    if(bMode)
-    {
-        ui->rbASCII->setChecked(true);
-        ui->rbHEX->setChecked(false);
-    }
-    else
-    {
-        ui->rbASCII->setChecked(false);
-        ui->rbHEX->setChecked(true);
-    }
+    emit activeModeStatusChanged(bMode);
 }
 
 void RecvWidget::setLineWrap(bool bWrap)
 {
-    ui->cbAutoLine->setChecked(bWrap);
+    emit activeWrapStatusChanged(bWrap);
 }

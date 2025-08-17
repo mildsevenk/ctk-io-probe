@@ -8,19 +8,17 @@
 #include <QDirIterator>
 #include <QUrl>
 #include "IDAMainWindow.h"
+#include "IDAWidget.h"
 #include <QString>
+#include <ctkPluginFrameworkLauncher.h>
 
 int main(int argc, char *argv[])
 {
     QApplication  a(argc, argv);
-
-    ctkPluginFrameworkFactory frameworkFactory;
-    QSharedPointer<ctkPluginFramework> framework = frameworkFactory.getFramework();
-    qDebug() << "App dir:" << QCoreApplication::applicationDirPath();
+    ctkPluginFrameworkLauncher::addSearchPath(QApplication::applicationDirPath() + "/plugins");
     // 初始化并启动插件框架
     try {
-        framework->init();
-        framework->start();
+        ctkPluginFrameworkLauncher::start("org.commontk.eventadmin");
         qDebug() << "CTK plugin framework start...";
     } catch (const ctkPluginException &e) {
         qDebug() << "CTK plugin framework init err: " << e.what();
@@ -36,11 +34,18 @@ int main(int argc, char *argv[])
     while (it.hasNext())
     {
         QString filePath = it.next();
-        pluginFiles.append(filePath);
+        QString fileName = it.fileInfo().baseName();
+        if(fileName != QObject::tr("liborg_commontk_eventadmin"))
+        {
+            pluginFiles.append(filePath);
+        }
     }
+
+    QMainWindow* pMain = nullptr;
+
     if(pluginFiles.count() > 0)
     {
-        ctkPluginContext* pluginContext = framework->getPluginContext();
+        ctkPluginContext* pluginContext = ctkPluginFrameworkLauncher::getPluginContext();
         QString strMainPluginName = QObject::tr("hierarch.da.mainwindow");
         QSharedPointer<ctkPlugin> mainPlugin = nullptr;
         foreach (const QString &pluginFile, pluginFiles)
@@ -68,15 +73,13 @@ int main(int argc, char *argv[])
         {
             try
             {
-                for (auto p : framework->getPluginContext()->getPlugins())
-                    qDebug() << p->getSymbolicName() << p->getVersion() << p->getLocation() << p->getState();
                 mainPlugin->start(ctkPlugin::START_TRANSIENT);
                 ctkServiceReference ref = pluginContext->getServiceReference<hierarch::da::IDAMainWindow>();
                 hierarch::da::IDAMainWindow* service =
                     qobject_cast<hierarch::da::IDAMainWindow*>(pluginContext->getService(ref));
                 if(service)
                 {
-                    QMainWindow* pMain = service->getMainWindow();
+                    pMain = service->getMainWindow();
                     pMain->show();
                 }
             }
@@ -86,6 +89,25 @@ int main(int argc, char *argv[])
             }
         }
     }
-
-    return a.exec();
+    int nRet = a.exec();
+    if(pMain)
+    {
+        pMain->close();
+    }
+    ctkPluginContext* pluginContext = ctkPluginFrameworkLauncher::getPluginContext();
+    if(pluginContext)
+    {
+        auto aPlugins = pluginContext->getPlugins();
+        for(QSharedPointer<ctkPlugin> plugin : aPlugins)
+        {
+            if(plugin->getSymbolicName() == QObject::tr("org.commontk.eventadmin"))
+            {
+                //卸载org.commontk.eventadmin
+                plugin->stop();
+                plugin->uninstall();
+                break;
+            }
+        }
+    }
+    return nRet;
 }

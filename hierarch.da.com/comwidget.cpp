@@ -2,6 +2,7 @@
 #include <QSerialPortInfo>
 
 #include "ui_ComWidget.h"   // 由 AUTOUIC 自动生成
+#include <QDebug>
 
 ComWidget::ComWidget(QWidget *parent)
     : QWidget(parent), ui(new Ui::ComWidget)
@@ -13,6 +14,12 @@ ComWidget::ComWidget(QWidget *parent)
     initParityBits();
     initDataBits();
     initStopBits();
+    ui->btnOpenClose->setCheckable(true);
+    QObject::connect(ui->btnOpenClose, &QPushButton::clicked,
+                     this, &ComWidget::onButtonClicked);
+    QObject::connect(this, &ComWidget::acvticeSendData,
+                     this, &ComWidget::sendDataContent);
+
 }
 
 ComWidget::~ComWidget() = default;
@@ -223,10 +230,12 @@ const QSerialPort::StopBits ComWidget::getCurStopBits()
 
 void ComWidget::onButtonClicked()
 {
-    if(m_pSerialPort->isOpen())
+    qDebug() << "ComWidget::onButtonClicked start";
+    if(!m_pSerialPort->isOpen())
     {
         if(ui->cbComNo->count() > 0)
         {
+            qDebug() << "PortName:"<<ui->cbComNo->currentText();
             m_pSerialPort->setPortName(ui->cbComNo->currentText());
             // 设置波特率
             m_pSerialPort->setBaudRate(getCurBaudRate());
@@ -235,15 +244,19 @@ void ComWidget::onButtonClicked()
             m_pSerialPort->setParity(getCurParity());
             m_pSerialPort->setStopBits(getCurStopBits());
             m_pSerialPort->setFlowControl(QSerialPort::NoFlowControl);
+            qDebug() << "open begin";
             if (m_pSerialPort->open(QIODevice::ReadWrite))
             {
+                qDebug() << "open success";
                 connect(m_pSerialPort, &QSerialPort::readyRead, this, &ComWidget::readData);
-                ui->btnOpenClose->text() = "关闭串口";
+                ui->btnOpenClose->setText(u8"关闭串口");
             }
             else
             {
+                qDebug() << "open failed";
                 emit notifyMessage("打开端口失败");
             }
+            qDebug() << "open end";
         }
         else
         {
@@ -254,14 +267,26 @@ void ComWidget::onButtonClicked()
     {
         if (m_pSerialPort->isOpen()) {
             m_pSerialPort->close();
-            ui->btnOpenClose->text() = "打开串口";
+            ui->btnOpenClose->setText(u8"打开串口");
         }
     }
 }
 
-void ComWidget::readData() {
+void ComWidget::readData()
+{
     QByteArray data = m_pSerialPort->readAll();
     emit dataMessage(data);
-
 }
 
+void ComWidget::sendData(QByteArray data)
+{
+    emit acvticeSendData(data);
+}
+
+void ComWidget::sendDataContent(QByteArray data)
+{
+    if(m_pSerialPort->isOpen())
+    {
+        m_pSerialPort->write(data);
+    }
+}

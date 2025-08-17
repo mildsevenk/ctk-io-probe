@@ -1,8 +1,12 @@
 #include "qdaviewshow.h"
+#include <QRegularExpression>
 
 QDAViewShow::QDAViewShow(QWidget* parent)
     : QPlainTextEdit(parent) {
     this->document()->setMaximumBlockCount(100000);
+    connect(this, &QDAViewShow::addDataLine, this, &QPlainTextEdit::appendPlainText, Qt::QueuedConnection);
+    connect(this, &QDAViewShow::insertData, this, &QPlainTextEdit::insertPlainText, Qt::QueuedConnection);
+    connect(this, &QDAViewShow::activeSendData, this, &QDAViewShow::getData, Qt::QueuedConnection);
 }
 
 bool QDAViewShow::addData(QByteArray str)
@@ -25,7 +29,15 @@ bool QDAViewShow::addData(QByteArray str)
     {
         return false;
     }
-    this->appendPlainText(text);
+    //this->appendPlainText(text);
+    if(this->getIsWrapLine())
+    {
+        emit addDataLine(text);
+    }
+    else
+    {
+        emit insertData(text);
+    }
     return true;
 }
 
@@ -35,7 +47,27 @@ bool QDAViewShow::clearData()
     return true;
 }
 
-QByteArray QDAViewShow::getData() const
+void QDAViewShow::sendData()
 {
-    return this->toPlainText().toLatin1();
+    emit activeSendData();
+}
+
+void QDAViewShow::getData()
+{
+    QString strData = this->toPlainText();
+    if(getShowMode() == IDADataShowCtrl::HEX)
+    {
+        strData.remove(QRegularExpression("\\s"));
+        if (strData.size() % 2)        // 奇数个字符补 0
+        {
+            strData = "0" + strData;
+        }
+        QByteArray data = QByteArray::fromHex(strData.toUtf8());
+        emit sendDataContent(data);
+    }
+    else
+    {
+        QByteArray data = this->toPlainText().toUtf8();
+        emit sendDataContent(data);
+    }
 }

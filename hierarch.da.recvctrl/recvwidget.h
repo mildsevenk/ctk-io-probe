@@ -2,6 +2,7 @@
 #define RECVWIDGET_H
 
 #include <QWidget>
+#include <QButtonGroup>
 #include "IDAWidget.h"
 
 QT_BEGIN_NAMESPACE
@@ -21,13 +22,15 @@ public:
     void setShowMode(bool bMode);
     void setLineWrap(bool bWrap);
 private:
+    QButtonGroup* m_buttonGroup;
     Ui::RecvWidget *ui;
 signals:
     void modeStatusChanged(bool bMode);
+    void activeModeStatusChanged(bool bMode);
     void wrapStatusChanged(bool bWrap);
+    void activeWrapStatusChanged(bool bWrap);
 private slots:
-    void onASCIICheckChanged(bool checked);
-    void onHEXCheckChanged(bool checked);
+    void onButtonClicked(QAbstractButton *button);
     void onWrapCheckChanged(bool checked);
 };
 

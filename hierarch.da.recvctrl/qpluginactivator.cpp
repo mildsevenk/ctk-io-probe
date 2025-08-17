@@ -67,7 +67,6 @@ void QPluginActivator::start(ctkPluginContext *context)
                 // 构造数据
                 ctkDictionary props;
                 props[DAEventNames::DA_BOOLEAN] = bMode;
-
                 // 异步发送（立即返回）
                 ea->postEvent(ctkEvent(DAEventNames::DA_RECV_DATA_MODE_CHANGED, props));
     });
@@ -84,7 +83,7 @@ void QPluginActivator::start(ctkPluginContext *context)
                 // 构造数据
                 ctkDictionary props;
                 props[DAEventNames::DA_BOOLEAN] = bWrap;
-
+                qDebug() << "DAEventNames::DA_RECV_DATA_WRAP_CHANGED";
                 // 异步发送（立即返回）
                 ea->postEvent(ctkEvent(DAEventNames::DA_RECV_DATA_WRAP_CHANGED, props));
             });

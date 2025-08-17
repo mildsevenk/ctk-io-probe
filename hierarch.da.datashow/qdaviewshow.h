@@ -4,14 +4,22 @@
 #include <QPlainTextEdit>
 #include "IDADataShowCtrl.h"
 
-class QDAViewShow : public QPlainTextEdit, IDADataShowCtrl
+class QDAViewShow : public QPlainTextEdit, public IDADataShowCtrl
 {
+    Q_OBJECT
 public:
     explicit QDAViewShow(QWidget* parent = nullptr);
     virtual bool addData(QByteArray) override;
     virtual bool clearData() override;
-    virtual QByteArray getData() const;
     virtual ~QDAViewShow() = default;
+    void sendData();
+signals:
+    void addDataLine(const QString& text);
+    void insertData(const QString& text);
+    void sendDataContent(QByteArray data);
+    void activeSendData();
+public slots:
+    void getData();
 };
 
 #endif // QDAVIEWSHOW_H

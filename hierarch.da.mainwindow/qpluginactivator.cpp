@@ -26,14 +26,17 @@ void QPluginActivator::start(ctkPluginContext *context)
         foreach (const ctkServiceReference& reference, references)
         {
             // 获取指定 ctkServiceReference 引用的服务对象
-            hierarch::da::IDACIFD* service = qobject_cast<hierarch::da::IDACIFD*>(context->getService(reference));
-            if (service != Q_NULLPTR)
+            if(reference)
             {
-                // 调用服务的接口函数
-                QWidget* pWidget = service->getWidget();
-                impl->addDeviceType(service->getDeviceName(), pWidget);
-            } else {
-                qDebug() << "Failed to cast the service to IDACIFD.";
+                hierarch::da::IDACIFD* service = qobject_cast<hierarch::da::IDACIFD*>(context->getService(reference));
+                if (service != Q_NULLPTR)
+                {
+                    // 调用服务的接口函数
+                    QWidget* pWidget = service->getWidget();
+                    impl->addDeviceType(service->getDeviceName(), pWidget);
+                } else {
+                    qDebug() << "Failed to cast the service to IDACIFD.";
+                }
             }
         }
     }
@@ -43,48 +46,53 @@ void QPluginActivator::start(ctkPluginContext *context)
     {
         foreach (ctkServiceReference widget, refWidgets)
         {
-            hierarch::da::IDAWidget* service = qobject_cast<hierarch::da::IDAWidget*>(context->getService(widget));
-            QString strName = service->getWidgetName();
-            QWidget* pWidget = service->getWidget();
-            if(pWidget != nullptr)
+            if(widget)
             {
-                if(strName == tr("hierarch.da.sendctrl"))
+                hierarch::da::IDAWidget* service = qobject_cast<hierarch::da::IDAWidget*>(context->getService(widget));
+                QString strName = service->getWidgetName();
+                QWidget* pWidget = service->getWidget();
+                if(pWidget != nullptr)
                 {
-                    impl->initSendSet(pWidget);
-                    m_lstRef.append(widget);
-                }
-                else if(strName == tr("hierarch.da.datashow"))
-                {
-                    impl->initRecvViewSet(pWidget);
-                    m_lstRef.append(widget);
-                }
-                else if(strName == tr("hierarch.da.recvctrl"))
-                {
-                    impl->initRecvSet(pWidget);
-                    m_lstRef.append(widget);
+                    if(strName == tr("hierarch.da.sendctrl"))
+                    {
+                        impl->initSendSet(pWidget);
+                        m_lstRef.append(widget);
+                    }
+                    else if(strName == tr("hierarch.da.datashow"))
+                    {
+                        impl->initRecvViewSet(pWidget);
+                        m_lstRef.append(widget);
+                    }
+                    else if(strName == tr("hierarch.da.recvctrl"))
+                    {
+                        impl->initRecvSet(pWidget);
+                        m_lstRef.append(widget);
+                    }
+                    else
+                    {
+                        context->ungetService(widget);
+                    }
                 }
                 else
                 {
                     context->ungetService(widget);
                 }
             }
-            else
-            {
-                context->ungetService(widget);
-            }
-
         }
     }
     ctkServiceReference refView = context->getServiceReference<hierarch::da::IDADataShowFactory>();
     {
-        hierarch::da::IDADataShowFactory* service = qobject_cast<hierarch::da::IDADataShowFactory*>(context->getService(refView));
-        if(service != nullptr)
+        if(refView)
         {
-            QWidget* pRecv = service->createView(true);
-            QWidget* pSend = service->createView(false);
-            impl->initRecvViewSet(pRecv);
-            impl->initSendViewSet(pSend);
-            m_factory = refView;
+            hierarch::da::IDADataShowFactory* service = qobject_cast<hierarch::da::IDADataShowFactory*>(context->getService(refView));
+            if(service != nullptr)
+            {
+                QWidget* pRecv = service->createView(true);
+                QWidget* pSend = service->createView(false);
+                impl->initRecvViewSet(pRecv);
+                impl->initSendViewSet(pSend);
+                m_factory = refView;
+            }
         }
     }
 
@@ -100,23 +108,13 @@ void QPluginActivator::start(ctkPluginContext *context)
                 // 构造数据
                 ctkDictionary props;
                 ea->postEvent(ctkEvent(DAEventNames::DA_SEND_DATA_COMMAND, props));
+                //测试数据发送
             });
 }
 
 void QPluginActivator::stop(ctkPluginContext *context)
 {
-    if(m_mainWindow)
-    {
-        m_mainWindow->uninitRecvViewSet();
-        m_mainWindow->uninitSendViewSet();
-    }
     context->ungetService(m_factory);
-    if(m_mainWindow)
-    {
-        m_mainWindow->uninitRecvSet();
-        m_mainWindow->uninitSendSet();
-        m_mainWindow->removeDeviceType();
-    }
     foreach (const ctkServiceReference& ref, m_lstRef)
     {
         context->ungetService(ref);

@@ -1,15 +1,21 @@
 ﻿#include "sendwidget.h"
 
 #include "ui_SendWidget.h"   // 由 AUTOUIC 自动生成
+#include <QButtonGroup>
 
 SendWidget::SendWidget(QWidget *parent)
     : QWidget(parent), ui(new Ui::SendWidget)
 {
     ui->setupUi(this);
-    connect(ui->rbASCII, SIGNAL(toggled(bool)),
-            this,          SLOT(onASCIICheckChanged(bool)));
-    connect(ui->rbHEX, SIGNAL(toggled(bool)),
-            this,          SLOT(onHEXCheckChanged(bool)));
+    ui->rbASCII->setCheckable(true);
+    ui->rbHEX->setCheckable(true);
+    this->m_buttonGroup = new QButtonGroup(this);
+    m_buttonGroup->addButton(ui->rbASCII);
+    m_buttonGroup->addButton(ui->rbHEX);
+    connect(m_buttonGroup, QOverload<QAbstractButton*>::of(&QButtonGroup::buttonClicked), this, &SendWidget::onButtonClicked);
+    connect(this, &SendWidget::activeModeStatusChanged,
+            ui->rbASCII, &QRadioButton::setChecked,
+            Qt::QueuedConnection);
 }
 
 SendWidget::~SendWidget() = default;
@@ -32,48 +38,36 @@ bool SendWidget::setParent(QWidget* pParent)
     }
 }
 
-
-void SendWidget::onASCIICheckChanged(bool checked)
+void SendWidget::onButtonClicked(QAbstractButton *button)
 {
-    if(checked)
-    {
-        ui->rbHEX->setChecked(false);
-        emit modeStatusChanged(true);
-    }
-    else
-    {
-        ui->rbHEX->setChecked(true);
-        emit modeStatusChanged(false);
-    }
 
-}
-
-void SendWidget::onHEXCheckChanged(bool checked)
-{
-    if(checked)
+    if(button == ui->rbASCII)
     {
-        ui->rbASCII->setChecked(false);
-        emit modeStatusChanged(false);
+        if(ui->rbASCII->isChecked())
+        {
+            emit modeStatusChanged(true);
+        }
+        else
+        {
+            emit modeStatusChanged(false);
+        }
     }
-    else
+    else if(button == ui->rbHEX)
     {
-        ui->rbASCII->setChecked(true);
-        emit modeStatusChanged(true);
+        if(ui->rbHEX->isChecked())
+        {
+            emit modeStatusChanged(false);
+        }
+        else
+        {
+            emit modeStatusChanged(true);
+        }
     }
 }
 
 
 void SendWidget::setShowMode(bool bMode)
 {
-    if(bMode)
-    {
-        ui->rbASCII->setChecked(true);
-        ui->rbHEX->setChecked(false);
-    }
-    else
-    {
-        ui->rbASCII->setChecked(false);
-        ui->rbHEX->setChecked(true);
-    }
+    emit activeModeStatusChanged(bMode);
 }
 

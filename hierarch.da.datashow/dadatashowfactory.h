@@ -34,6 +34,42 @@ private:
     QDAViewShow* m_pWidget;
 };
 
+class ViewRecvStateDataHandler : public QObject, public ctkEventHandler
+{
+    Q_OBJECT
+    Q_INTERFACES(ctkEventHandler)
+public:
+    explicit ViewRecvStateDataHandler(QDAViewShow* pWidget);
+    void handleEvent(const ctkEvent& event) override;
+
+private:
+    QDAViewShow* m_pWidget = nullptr;
+};
+
+class ViewSendStateDataHandler : public QObject, public ctkEventHandler
+{
+    Q_OBJECT
+    Q_INTERFACES(ctkEventHandler)
+public:
+    explicit ViewSendStateDataHandler(QDAViewShow* pWidget);
+    void handleEvent(const ctkEvent& event) override;
+
+private:
+    QDAViewShow* m_pWidget = nullptr;
+};
+
+class AutoLineDataHandler : public QObject, public ctkEventHandler
+{
+    Q_OBJECT
+    Q_INTERFACES(ctkEventHandler)
+public:
+    explicit AutoLineDataHandler(QDAViewShow* pWidget);
+    void handleEvent(const ctkEvent& event) override;
+
+private:
+    QDAViewShow* m_pWidget = nullptr;
+};
+
 class SendDataHandler : public QObject, public ctkEventHandler
 {
     Q_OBJECT

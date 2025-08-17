@@ -8,6 +8,7 @@
 #include <IDADataShowFactory.h>
 #include <QThread>
 #include <QTimer>
+#include <ctkPluginFrameworkLauncher.h>
 
 class AllPluginsTest : public QObject
 {
@@ -20,8 +21,6 @@ private slots:
     void test_datashow();
     void cleanupTestCase();
 private:
-    ctkPluginFrameworkFactory factory;
-    QSharedPointer<ctkPluginFramework> fw;
     ctkPluginContext* ctx = nullptr;
     QWidget* m_sendWidget = nullptr;
     QWidget* m_recvWidget = nullptr;
@@ -34,10 +33,9 @@ void AllPluginsTest::initTestCase()
 {
     qputenv("CTK_DEBUG", "1");          // 打开 CTK 调试
     qputenv("QT_LOGGING_RULES", "*.debug=true");
-    fw = factory.getFramework();
-    fw->init();
-    fw->start();
-    ctx = fw->getPluginContext();
+    ctkPluginFrameworkLauncher::addSearchPath(QCoreApplication::applicationDirPath() + "/plugins");
+    ctkPluginFrameworkLauncher::start();
+    ctx = ctkPluginFrameworkLauncher::getPluginContext();
     const QStringList pluginNames = {
         "hierarch_da_sendctrl",
         "hierarch_da_recvctrl",
@@ -208,19 +206,30 @@ void AllPluginsTest::cleanupTestCase()
     {
         m_showdataWidget->close();
     }
-    /*try {
+    //QCoreApplication::processEvents();
+    const QStringList pluginSymbolicNames = {
+        "hierarch.da.sendctrl",
+        "hierarch.da.recvctrl",
+        "hierarch.da.com",
+        "hierarch.da.datashow"
+    };
+    try {
         QList<QSharedPointer<ctkPlugin>> plugins = ctx->getPlugins();
         for(QSharedPointer<ctkPlugin> plugin : plugins)
         {
-            plugin->stop();
-            plugin->uninstall();
+            QString sn = plugin->getSymbolicName();
+            if (pluginSymbolicNames.contains(sn)) {
+                plugin->stop();
+                plugin->uninstall();
+            }
         }
     } catch (const ctkRuntimeException& e) {
         QFAIL(qPrintable(QString("CTK: ") + e.what()));
     } catch (const std::exception& e) {
         QFAIL(qPrintable(QString("STD: ") + e.what()));
-    }*/
-    fw->stop();
+    }
+    //fw->stop();
+    //fw.clear();
 }
 
 QTEST_MAIN(AllPluginsTest)

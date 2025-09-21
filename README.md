@@ -8,7 +8,7 @@
 ctk-io-probe 借助 **CTK Plugin Framework** 实现真正的**插件化架构**：  
 - 一个主程序  
 - 按需加载协议插件  
-- 后续无缝支持 Linux / macOS  
+- 已支持 Linux  
 
 ---
 
@@ -19,7 +19,7 @@ ctk-io-probe 借助 **CTK Plugin Framework** 实现真正的**插件化架构**�
 | USB 调试 | 基于 libusb，支持 Bulk/Interrupt/Isochronous 传输 | 🔨 开发中 |
 | CAN 调试 | 支持 SocketCAN、PeakCAN、ZLG 等主流适配器 | 🔜 规划中 |
 | 插件化 | 运行时热插拔，不同协议互不干扰 | ✅ |
-| 跨平台 | Qt + C++ 实现，代码同构，后续可编译 Linux 版 | ✅ (Win 先行) |
+| 跨平台 | Qt + C++ 实现，代码同构，✅ Linux 版 | ✅ Win |
 | 图形界面 | Qt Widgets 原生体验 | ✅ |
 
 ---
@@ -29,6 +29,7 @@ ctk-io-probe 借助 **CTK Plugin Framework** 实现真正的**插件化架构**�
 ### 1. 环境要求
 - Windows 10 (1903 及以上)  
 - MSVC 2019 64-bit 运行库
+- Ubuntu 20.04
 
 ### 2. 最小示例 – 串口环回测试
 1. 打开软件 → **串口插件** → 选择端口号  
